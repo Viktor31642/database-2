@@ -1,27 +1,4 @@
-// const jwt = require("jsonwebtoken");
-// const JWT_SECRET = process.env.JWT_SECRET || "supersecret_key_change_me";
 
-// exports.requireAuth = (req, res, next) => {
-//   try {
-//     const header = req.headers.authorization || "";
-//     const [, token] = header.split(" "); // "Bearer <token>"
-//     if (!token) return res.status(401).json({ error: "No token" });
-
-//     const payload = jwt.verify(token, JWT_SECRET);
-//     req.user = payload; // { uid, role, email }
-//     next();
-//   } catch (e) {
-//     return res.status(401).json({ error: "Invalid or expired token" });
-//   }
-// };
-
-// // опційно: вимога конкретної ролі
-// exports.requireRole = (role) => (req, res, next) => {
-//   if (!req.user || req.user.role !== role) {
-//     return res.status(403).json({ error: "Forbidden" });
-//   }
-//   next();
-// };
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret_key_123";
