@@ -29,7 +29,7 @@ exports.createCard = async (req, res) => {
   try {
     const { type, title, price, benefits } = req.body;
     const newCard = await ClubCard.create({ type, title, price, benefits });
-    res.status(201).json({ message: "✅ Картку створено", newCard });
+    res.status(201).json({ message: " Картку створено", newCard });
   } catch (err) {
     res.status(500).json({ error: "Не вдалося створити картку" });
   }
@@ -41,7 +41,7 @@ exports.updateCard = async (req, res) => {
     const card = await ClubCard.findByPk(id);
     if (!card) return res.status(404).json({ error: "Картку не знайдено" });
     await card.update(req.body);
-    res.json({ message: "✅ Картку оновлено", card });
+    res.json({ message: " Картку оновлено", card });
   } catch (err) {
     res.status(500).json({ error: "Помилка оновлення" });
   }
@@ -61,7 +61,7 @@ exports.deleteCard = async (req, res) => {
 
 /* ==================== ПОКУПКИ ==================== */
 
-// ✅ Створити покупку
+//  Створити покупку
 exports.addPurchase = async (req, res) => {
   try {
     const { card_id, firstName, lastName, phone, asGift } = req.body;
@@ -69,7 +69,7 @@ exports.addPurchase = async (req, res) => {
     if (!card) return res.status(404).json({ error: "Картку не знайдено" });
 
     const purchase = await Purchase.create({ card_id, firstName, lastName, phone, asGift });
-    res.status(201).json({ message: "✅ Покупку збережено", purchase });
+    res.status(201).json({ message: " Покупку збережено", purchase });
   } catch (err) {
     console.error("Помилка покупки:", err);
     res.status(500).json({ error: "Не вдалося оформити покупку" });
@@ -126,7 +126,7 @@ exports.updatePurchase = async (req, res) => {
     }
 
     await purchase.update({ firstName, lastName, phone, asGift });
-    res.json({ message: "✅ Покупку оновлено", purchase });
+    res.json({ message: " Покупку оновлено", purchase });
   } catch (err) {
     console.error("Помилка оновлення покупки:", err);
     res.status(500).json({ error: "Не вдалося оновити покупку" });
