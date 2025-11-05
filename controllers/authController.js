@@ -1,63 +1,158 @@
+// const express = require("express");
+// const router = express.Router();
+// const bcrypt = require("bcryptjs");
+// const jwt = require("jsonwebtoken");
+// const User = require("../models/User");
+
+// const JWT_SECRET = "super_secret_key_123";
+
+// // Реєстрація
+// router.post("/register", async (req, res) => {
+//   try {
+//     const { name, email, password, role = "user" } = req.body;
+//     const existing = await User.findOne({ where: { email } });
+//     if (existing) return res.status(400).json({ message: "Email вже використовується" });
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const newUser = await User.create({ name, email, password: hashedPassword, role });
+//     res.json({ message: "Користувач створений", user: newUser });
+//   } catch (error) {
+//     res.status(500).json({ message: "Помилка при створенні користувача", error });
+//   }
+// });
+
+// // Логін
+// router.post("/login", async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     const user = await User.findOne({ where: { email } });
+
+//     if (!user) return res.status(400).json({ message: "Користувача не знайдено" });
+
+//     const valid = await bcrypt.compare(password, user.password);
+//     if (!valid) return res.status(400).json({ message: "Невірний пароль" });
+
+//     const token = jwt.sign(
+//       { id: user.id, role: user.role },
+//       JWT_SECRET,
+//       { expiresIn: "2h" }
+//     );
+
+//     // ✅ Додай об’єкт user у відповідь
+//     res.json({
+//       message: "Успішний вхід",
+//       token,
+//       user: {
+//         id: user.id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ message: "Помилка при вході", error });
+//   }
+// });
+
+
+
+// module.exports = router;
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret_key_change_me";
-const JWT_EXPIRES = "2h";
+const JWT_SECRET = process.env.JWT_SECRET || "super_secret_key_123";
+const TOKEN_EXPIRES_IN = "2h";
 
-// POST /api/auth/register  (разово для створення адміна)
+/**
+ * Реєстрація користувача
+ */
 exports.register = async (req, res) => {
   try {
-    const { email, password, role = "admin" } = req.body;
-    if (!email || !password) return res.status(400).json({ error: "email & password required" });
+    const { name, email, password, role = "user" } = req.body;
 
-    const exists = await User.findOne({ where: { email } });
-    if (exists) return res.status(409).json({ error: "User already exists" });
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "Заповніть всі обов’язкові поля" });
 
-    const password_hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password_hash, role });
+    const existing = await User.findOne({ where: { email } });
+    if (existing)
+      return res.status(400).json({ message: "Email вже використовується" });
 
-    res.status(201).json({ id: user.id, email: user.email, role: user.role });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Server error" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    res.status(201).json({
+      message: "Користувач створений успішно",
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Помилка при реєстрації:", error);
+    res.status(500).json({ message: "Помилка при створенні користувача" });
   }
 };
 
-// POST /api/auth/login
+/**
+ * Логін користувача
+ */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    const user = await User.findOne({ where: { email } });
+    if (!user)
+      return res.status(400).json({ message: "Користувача не знайдено" });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid)
+      return res.status(400).json({ message: "Невірний пароль" });
 
     const token = jwt.sign(
-      { uid: user.id, role: user.role, email: user.email },
+      { id: user.id, role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES }
+      { expiresIn: TOKEN_EXPIRES_IN }
     );
 
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Server error" });
+    res.json({
+      message: "Успішний вхід",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Помилка при вході:", error);
+    res.status(500).json({ message: "Помилка при вході" });
   }
 };
-const User = require("../models/User");
 
-// --- Отримати всіх користувачів (лише для admin)
+/**
+ * Отримати всіх користувачів (для адмінів)
+ */
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ["id", "name", "email", "role", "created_at"], // які поля повертати
+      attributes: ["id", "name", "email", "role", "created_at"],
       order: [["id", "ASC"]],
     });
     res.json(users);
   } catch (error) {
     console.error("Помилка при отриманні користувачів:", error);
-    res.status(500).json({ error: "Помилка сервера" });
+    res.status(500).json({ message: "Помилка сервера" });
   }
 };
