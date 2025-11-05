@@ -4,7 +4,7 @@ const request = require('supertest');
 const express = require('express');
 
 /**
- * 1) Мокаємо sequelize-інстанс, щоб не було authenticate()/sync()
+ * 1) Мокаємо sequelize-інстанс
  */
 jest.mock('../config/sequelize', () => ({
   define: jest.fn(),
